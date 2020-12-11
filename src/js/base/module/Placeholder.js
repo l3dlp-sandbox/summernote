@@ -1,38 +1,45 @@
-define(function () {
-  var Placeholder = function (context) {
-    var self = this;
-    var $editingArea = context.layoutInfo.editingArea;
-    var options = context.options;
+import $ from 'jquery';
+export default class Placeholder {
+  constructor(context) {
+    this.context = context;
+
+    this.$editingArea = context.layoutInfo.editingArea;
+    this.options = context.options;
+
+    if (this.options.inheritPlaceholder === true) {
+      // get placeholder value from the original element
+      this.options.placeholder = this.context.$note.attr('placeholder') || this.options.placeholder;
+    }
 
     this.events = {
-      'summernote.init summernote.change': function () {
-        self.update();
+      'summernote.init summernote.change': () => {
+        this.update();
       },
-      'summernote.codeview.toggled': function () {
-        self.update();
-      }
+      'summernote.codeview.toggled': () => {
+        this.update();
+      },
     };
+  }
 
-    this.shouldInitialize = function () {
-      return !!options.placeholder;
-    };
+  shouldInitialize() {
+    return !!this.options.placeholder;
+  }
 
-    this.initialize = function () {
-      this.$placeholder = $('<div class="note-placeholder">');
-      this.$placeholder.on('click', function () {
-        context.invoke('focus');
-      }).text(options.placeholder).prependTo($editingArea);
-    };
+  initialize() {
+    this.$placeholder = $('<div class="note-placeholder">');
+    this.$placeholder.on('click', () => {
+      this.context.invoke('focus');
+    }).html(this.options.placeholder).prependTo(this.$editingArea);
 
-    this.destroy = function () {
-      this.$placeholder.remove();
-    };
+    this.update();
+  }
 
-    this.update = function () {
-      var isShow = !context.invoke('codeview.isActivated') && context.invoke('editor.isEmpty');
-      this.$placeholder.toggle(isShow);
-    };
-  };
+  destroy() {
+    this.$placeholder.remove();
+  }
 
-  return Placeholder;
-});
+  update() {
+    const isShow = !this.context.invoke('codeview.isActivated') && this.context.invoke('editor.isEmpty');
+    this.$placeholder.toggle(isShow);
+  }
+}
